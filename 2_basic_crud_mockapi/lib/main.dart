@@ -66,7 +66,7 @@ class _MyAppState extends State<MyApp> {
                               IconButton(
                                 icon: Icon(Icons.edit),
                                 onPressed: () {
-                                  updateUserData(userData[index]);
+                                  showUpdateDialog(context, userData[index]);
                                 },
                               ),
                               IconButton(
@@ -94,6 +94,9 @@ class _MyAppState extends State<MyApp> {
                       controller: avatarController,
                       decoration: InputDecoration(labelText: 'Avatar URL'),
                     ),
+                    SizedBox(
+                      height: 20,
+                    ),
                     ElevatedButton(
                       onPressed: () {
                         addUser();
@@ -110,29 +113,26 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Future<void> updateUserData(Map<String, dynamic> user) async {
-    String userId = user['id'];
-    String updateUrl = '$url/$userId';
-
-    // Create controllers for the input fields
-    TextEditingController nameInputController =
+  void showUpdateDialog(BuildContext context, Map<String, dynamic> user) async {
+    final TextEditingController nameController =
         TextEditingController(text: user['name']);
-    TextEditingController avatarInputController =
+    final TextEditingController avatarController =
         TextEditingController(text: user['avatar']);
 
-    return showDialog(
+    await showDialog(
       context: context,
-      builder: (context) {
+      builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Update User Data'),
+          title: Text('Update User'),
           content: Column(
+            mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               TextFormField(
-                controller: nameInputController,
+                controller: nameController,
                 decoration: InputDecoration(labelText: 'Name'),
               ),
               TextFormField(
-                controller: avatarInputController,
+                controller: avatarController,
                 decoration: InputDecoration(labelText: 'Avatar URL'),
               ),
             ],
@@ -145,11 +145,11 @@ class _MyAppState extends State<MyApp> {
               },
             ),
             TextButton(
-              child: Text('Save'),
+              child: Text('Update'),
               onPressed: () {
-                // Perform the update with the new data
-                updateUser(userId, nameInputController.text,
-                    avatarInputController.text);
+                String newName = nameController.text;
+                String newAvatar = avatarController.text;
+                updateUserData(user['id'], newName, newAvatar);
                 Navigator.of(context).pop();
               },
             ),
@@ -159,7 +159,7 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  void updateUser(String userId, String newName, String newAvatar) async {
+  void updateUserData(String userId, String newName, String newAvatar) async {
     String updateUrl = '$url/$userId';
 
     try {
@@ -170,7 +170,7 @@ class _MyAppState extends State<MyApp> {
 
       if (response.statusCode == 200) {
         print('User updated successfully');
-        fetchData(); // Refresh the user list after updating
+        fetchData(); // Refresh the user list after update
       } else {
         print('Failed to update user. Status code: ${response.statusCode}');
       }
